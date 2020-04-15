@@ -48,12 +48,12 @@ func TestWriteBroadcast(t *testing.T) {
 	f := openFile(t, broadCastDemoPath)
 	defer mustClose(t, f)
 
-	out, err := os.Create("fake.dem")
+	out, err := os.Create("dc_offsets.txt")
 	assert.Nil(t, err)
 	defer mustClose(t, out)
 
 	cfg := demoinfocs.ParserConfig{BroadcastWriter: out}
-	p := demoinfocs.NewParserWithConfig(io.TeeReader(f, out), cfg)
+	p := demoinfocs.NewParserWithConfig(f, cfg)
 
 	err = p.ParseToEnd()
 	assert.Nil(t, err)

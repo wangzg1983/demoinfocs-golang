@@ -318,7 +318,7 @@ func (p *parser) parsePacket() {
 
 	// not sure if this will fly
 	if p.broadcastWriter != nil {
-		_, err := p.broadcastWriter.Write(make([]byte, nCommandInfoBytes, nCommandInfoBytes))
+		_, err := p.broadcastWriter.Write([]byte(fmt.Sprintf("%d,%d\n", p.bitReader.ActualPosition()/8, p.bitReader.ActualPosition()%8)))
 		if err != nil {
 			panic(err)
 		}
