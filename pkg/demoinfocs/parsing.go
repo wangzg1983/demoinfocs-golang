@@ -243,9 +243,21 @@ func (p *parser) parseFrame() bool {
 
 		dtLen := p.bitReader.ActualPosition() - prevPos
 		fmt.Println("DT len", dtLen/8, dtLen%8)
-		fmt.Println("DT len hex dump", hex.Dump(SignedInt32ToBytes(dtLen)))
+		fmt.Println("DT len hex dump", hex.Dump(SignedInt32ToBytes(dtLen/8)))
+		b := SignedInt32ToBytes(dtLen / 8)
+
+		b2 := make([]byte, 10, 10)
+		copy(b2[2:], b)
+		val := binary.LittleEndian.Uint64(b2[2:])
+		// Cast to int64 before right shift & use offset before advance
+		res := int(int64(val<<uint(64-(0&31)-32)) >> (64 - uint(32)))
+
+		if res != dtLen/8 {
+			panic(fmt.Sprint(res, dtLen))
+		}
+
 		f, _ := os.Create("dt_len.bin")
-		f.Write(SignedInt32ToBytes(dtLen))
+		f.Write(b)
 		f.Close()
 		//p.bitReader.EndChunk()
 
