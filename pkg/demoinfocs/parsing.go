@@ -1,10 +1,13 @@
 package demoinfocs
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
 	"math"
+	"os"
 	"sync"
 	"time"
 
@@ -201,6 +204,12 @@ const (
 	dcStringTables   demoCommand = 9
 )
 
+func SignedInt32ToBytes(i int) []byte {
+	b := make([]byte, 4, 4)
+	binary.LittleEndian.PutUint32(b, uint32(i))
+	return b
+}
+
 func (p *parser) parseFrame() bool {
 	cmd := demoCommand(p.bitReader.ReadSingleByte())
 
@@ -227,9 +236,18 @@ func (p *parser) parseFrame() bool {
 	case dcDataTables:
 		p.msgDispatcher.SyncAllQueues()
 
-		p.bitReader.BeginChunk(p.bitReader.ReadSignedInt(32) << 3)
+		prevPos := p.bitReader.ActualPosition()
+		fmt.Println("pre", prevPos/8, prevPos%8)
+		//p.bitReader.BeginChunk(p.bitReader.ReadSignedInt(32) << 3)
 		p.stParser.ParsePacket(p.bitReader)
-		p.bitReader.EndChunk()
+
+		dtLen := p.bitReader.ActualPosition() - prevPos
+		fmt.Println("DT len", dtLen/8, dtLen%8)
+		fmt.Println("DT len hex dump", hex.Dump(SignedInt32ToBytes(dtLen)))
+		f, _ := os.Create("dt_len.bin")
+		f.Write(SignedInt32ToBytes(dtLen))
+		f.Close()
+		//p.bitReader.EndChunk()
 
 		debugAllServerClasses(p.ServerClasses())
 
@@ -292,8 +310,19 @@ func (p *parser) parsePacket() {
 	// Booooring
 	// 152 bytes CommandInfo, 4 bytes SeqNrIn, 4 bytes SeqNrOut
 	// See at the bottom of the file what the CommandInfo would contain if you are interested.
-	const nCommandInfoBits = (152 + 4 + 4) << 3
-	p.bitReader.Skip(nCommandInfoBits)
+	const (
+		nCommandInfoBytes = 152 + 4 + 4
+		//nCommandInfoBits  = nCommandInfoBytes << 3
+	)
+	//p.bitReader.Skip(nCommandInfoBits)
+
+	// not sure if this will fly
+	if p.broadcastWriter != nil {
+		_, err := p.broadcastWriter.Write(make([]byte, nCommandInfoBytes, nCommandInfoBytes))
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	// Here we go
 	p.bitReader.BeginChunk(p.bitReader.ReadSignedInt(32) << 3)

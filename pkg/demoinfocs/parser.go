@@ -73,6 +73,8 @@ type parser struct {
 	stringTables         []*msg.CSVCMsg_CreateStringTable                // Contains all created sendtables, needed when updating them
 	delayedEventHandlers []func()                                        // Contains event handlers that need to be executed at the end of a tick (e.g. flash events because FlashDuration isn't updated before that)
 	playerResourceEntity st.Entity                                       // CCSPlayerResource entity instance, contains scoreboard info and more
+
+	broadcastWriter io.Writer
 }
 
 // NetMessageCreator creates additional net-messages to be dispatched to net-message handlers.
@@ -275,6 +277,8 @@ type ParserConfig struct {
 	// Check out parsing.go to see which net-messages are already being parsed by default.
 	// This is a beta feature and may be changed or replaced without notice.
 	AdditionalNetMessageCreators map[int]NetMessageCreator
+
+	BroadcastWriter io.Writer
 }
 
 // DefaultParserConfig is the default Parser configuration used by NewParser().
@@ -300,6 +304,7 @@ func NewParserWithConfig(demostream io.Reader, config ParserConfig) Parser {
 	p.gameEventHandler = newGameEventHandler(&p)
 	p.userMessageHandler = newUserMessageHandler(&p)
 	p.demoInfoProvider = demoInfoProvider{parser: &p}
+	p.broadcastWriter = config.BroadcastWriter
 
 	// Attach proto msg handlers
 	p.msgDispatcher.RegisterHandler(p.handlePacketEntities)

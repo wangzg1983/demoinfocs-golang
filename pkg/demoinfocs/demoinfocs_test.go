@@ -33,11 +33,31 @@ const (
 	demSetPath              = csDemosPath + "/set"
 	defaultDemPath          = csDemosPath + "/default.dem"
 	unexpectedEndOfDemoPath = csDemosPath + "/unexpected_end_of_demo.dem"
+	broadCastDemoPath       = "/home/mark/dev/csgo-broadcast/bin/s90134421779034112t1586972772/fake.dem"
 )
 
 var concurrentDemos = flag.Int("concurrentdemos", 2, "The `number` of current demos")
 
 var update = flag.Bool("update", false, "update .golden files")
+
+func TestWriteBroadcast(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test due to -short flag")
+	}
+
+	f := openFile(t, broadCastDemoPath)
+	defer mustClose(t, f)
+
+	out, err := os.Create("fake.dem")
+	assert.Nil(t, err)
+	defer mustClose(t, out)
+
+	cfg := demoinfocs.ParserConfig{BroadcastWriter: out}
+	p := demoinfocs.NewParserWithConfig(io.TeeReader(f, out), cfg)
+
+	err = p.ParseToEnd()
+	assert.Nil(t, err)
+}
 
 func TestDemoInfoCs(t *testing.T) {
 	if testing.Short() {
