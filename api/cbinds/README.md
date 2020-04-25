@@ -2,11 +2,11 @@
 
 Use *demoinfocs-golang* as a library in your program written in C.
 
-At this point, **there exists only the prototype, which proofs that the library can be called from C. So a lot of events and other data structs are missing.**
+Currently, there is only a working prototype, which proofs that the library can be called from C. So **a lot of events and other data structs are missing.**
 
 ## Example
 
-```
+```C
 #include <stdio.h>
 #include "libdemoinfocs.h"
 
@@ -25,7 +25,14 @@ int main() {
 
 This simple example creates a parser, registers an event handler `printKills()` and executes the parser. Every time a `demoinfocs.events.Kill` is fired, the Go library calls `printKills()`.
 
-To see an example in action, go to the `examples/cbinds` folder and run `make run-example1`. This will build a shared library `libdemoinfocs.so`, compile `example1.c` against it and run the resulting binary. You have to provide a `demo.dem` in the same directory.
+To see an example in action:
+
+```
+$ cd examples/cbinds
+$ make run-example1
+```
+
+This will build a shared library `libdemoinfocs.so`, compile `example1.c` against it and run the resulting binary. You have to provide a `demo.dem` in the same directory.
 
 ## How it works
 
