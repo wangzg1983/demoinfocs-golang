@@ -336,6 +336,7 @@ func (geh gameEventHandler) playerDeath(data map[string]*msg.CSVCMsg_GameEventKe
 		IsHeadshot:        data["headshot"].GetValBool(),
 		PenetratedObjects: int(data["penetrated"].GetValShort()),
 		Weapon:            geh.getEquipmentInstance(killer, wepType),
+		Tick:              geh.parser.currentFrame,
 	})
 }
 
